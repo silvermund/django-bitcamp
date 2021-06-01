@@ -17,7 +17,7 @@ if __name__ == '__main__':
             plot.draw_embarked()
         elif menu == '2':
             controller = Controller()
-            controller.preprocess('train.csv', 'test.csv')
+            df = controller.modeling('train.csv', 'test.csv')
         elif menu == '3':
             pass
         elif menu == '4':
