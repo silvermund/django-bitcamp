@@ -1,6 +1,10 @@
 from titanic.models.dataset import Dataset
 import pandas as pd
-
+import numpy as np
+from sklearn.svm import SVC
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
 
 class Service(object):
 
@@ -21,9 +25,10 @@ class Service(object):
         return this.train['Survived']
 
     @staticmethod
-    def drop_feature(this, feature) -> object:
-        this.train = this.train.drop([feature], axis = 1)
-        this.test = this.test.drop([feature], axis=1)
+    def drop_feature(this, *feature) -> object:
+        for i in feature:
+            this.train = this.train.drop([i], axis=1)
+            this.test = this.test.drop([i], axis=1)
         return this
 
     @staticmethod
@@ -36,10 +41,13 @@ class Service(object):
 
     @staticmethod
     def fare_ordinal(this) -> object:
-        return this
-
-    @staticmethod
-    def fare_band_fill_na(this) -> object:
+        this.test['Fare'] = this.test['Fare'].fillna(1)
+        this.train['FareBand'] = pd.qcut(this.train['Fare'], 4)
+        # print(f'qcut 으로 bins 값 설정 {this.train["FareBand"].head()}')
+        bins = [-1, 8, 15, 31, np.inf]
+        this.train = this.train.drop(['FareBand'], axis=1)
+        for these in [this.train, this.test]:
+            these['FareBand'] = pd.cut(these['Fare'], bins=bins, labels=[1, 2, 3, 4])
         return this
 
     @staticmethod
@@ -60,19 +68,44 @@ class Service(object):
 
     @staticmethod
     def gender_norminal(this) -> object:
-        combine = [this.train, this.test]
         gender_mapping = {'male': 0, 'female': 1}
-        for i in combine:
-            i['Gender'] = i['Sex'].map(gender_mapping)
-        this.train = combine[0]
-        this.test = combine[1]
+        for these in [this.train, this.test]:
+            these['Gender'] = these['Sex'].map(gender_mapping)
         return this
 
     @staticmethod
     def age_ordinal(this) -> object:
+        train = this.train
+        test = this.test
+        train['Age'] = train['Age'].fillna(-0.5)
+        test['Age'] = test['Age'].fillna(-0.5)
+        bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf]
+        labels = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'Young Adult', 'Adult', 'Senior']
+        age_title_mapping = {'Unknown':0 , 'Baby': 1, 'Child': 2, 'Teenager' : 3, 'Student': 4, 'Young Adult': 5,
+                             'Adult':6,  'Senior': 7}
+        for i in train, test:
+            i['AgeGroup'] = pd.cut(i['Age'], bins=bins, labels=labels) # {[labels]:[bins]}
+            i['AgeGroup'] = i['AgeGroup'].map(age_title_mapping)
+
         return this
 
     @staticmethod
-    def create_k_fold(this) -> object:
-        return
+    def create_k_fold() -> object:
+        return KFold(n_splits=10, shuffle=True, random_state=0)
 
+    @staticmethod
+    def accuracy_by_svm(this):
+        print(f'10. Train 의 type \n {type(this.train)} ')
+        print(f'11. Train 의 column \n {this.train.columns} ')
+        print(f'12. Train 의 상위 1개 행\n {this.train.head()} ')
+        print(f'13. Train 의 null 의 갯수\n {this.train.isnull().sum()}개')
+        print(f'14. label \n {type(this.label)}')
+        score = cross_val_score(RandomForestClassifier(),
+                                this.train,
+                                this.label,
+                                cv=KFold(n_splits=10,
+                                         shuffle=True,
+                                         random_state=0),
+                                n_jobs=1,
+                                scoring='accuracy')
+        return round(np.mean(score) * 100, 2)

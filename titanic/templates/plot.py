@@ -1,4 +1,3 @@
-
 from titanic.models.dataset import Dataset
 from titanic.models.service import Service
 import matplotlib.pyplot as plt
@@ -9,8 +8,8 @@ rc('font', family = font_manager.FontProperties(fname='C:/Windows/Fonts/H2GTRE.t
 
 class Plot(object):
 
-    dataset: object = Dataset()
-    service: object = Service()
+    dataset = Dataset()
+    service = Service()
 
     def __init__(self, fname):
         self.entity = self.service.new_model(fname)
@@ -54,8 +53,6 @@ class Plot(object):
             .replace("C", '쉘버그').replace("S", '사우스햄톤').replace("Q", '퀸즈타운')
         sns.countplot(data=this, x='승선항구', hue='생존결과')
         plt.show()
-
-
 
 '''
 The data type of Train is <class 'pandas.core.frame.DataFrame'>.

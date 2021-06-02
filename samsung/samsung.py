@@ -11,14 +11,14 @@ class Samsung(object):
     title = []
     dict = []
 
-    def set_url(self, detail):
-        self.url = requests.get(f'{self.url}{detail}').text
+    def set_url(self):
+        self.url = requests.get(f'{self.url}').text
 
     def get_ranking(self):
         soup = BeautifulSoup(self.url, 'lxml')
-        ls = soup.find_all(name='tah p11', attrs=({"class":'span'}))
+        ls = soup.find_all(name='td', attrs=({"class":'num'}))
         for i in ls:
-            self.title.append(i.find("num").text)
+            self.title.append(i.find("span").text)
 
     def insert_dict(self):
         for i, j in enumerate(self.title):
@@ -46,7 +46,7 @@ class Samsung(object):
             if menu == '0':
                 break
             elif menu == '1':
-                samsung.set_url('wl_ref=M_contents_03_01')
+                samsung.set_url()
             elif menu == '2':
                 samsung.class_name.append("title")
                 samsung.get_ranking()
